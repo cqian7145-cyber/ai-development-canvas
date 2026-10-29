@@ -103,6 +103,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--blue);
 .workspace-loading, .workspace-error { display: grid; align-content: center; min-height: 100dvh; padding: 24px; color: var(--muted); font-size: 13px; }
 .workspace-error h1 { color: var(--ink); font-size: 18px; }
 .flow-attribution { display: none; }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 9px 12px; border-radius: 6px; color: white; background: var(--blue); transform: translateY(calc(-100% - 16px)); transition: transform 150ms ease; }
+.skip-link:focus { transform: translateY(0); }
 @keyframes panel-in { from { opacity: .5; transform: translateX(5px); } to { opacity: 1; transform: translateX(0); } }
 
 @media (max-width: 760px) {
