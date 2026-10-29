@@ -1,77 +1,170 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
   BackgroundVariant,
   Controls,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
-  useNodesState,
   useReactFlow,
   type Connection,
+  type EdgeChange,
   type Edge,
-  type Node,
+  type NodeChange,
   type Viewport,
 } from '@xyflow/react'
-import { readWorkflowSnapshot, writeWorkflowSnapshot, type WorkflowSnapshot } from '@/lib/workflow-storage'
-import { WorkflowNode, type WorkflowNodeModel } from './workflow-node'
+import { readWorkflowForProject, saveWorkflowForProject } from '@/lib/project-storage'
+import type { WorkflowDocument, WorkflowNode, WorkflowNodeData, WorkflowNodeType } from '@/lib/project-model'
+import { WorkflowNode as WorkflowNodeView } from './workflow-node'
 
-const initialNodes: WorkflowNodeModel[] = [
-  { id: 'requirements', type: 'workflow', position: { x: 80, y: 180 }, data: { label: '需求分析', description: '梳理目标与用户问题', kind: 'analysis' } },
-  { id: 'design', type: 'workflow', position: { x: 340, y: 180 }, data: { label: 'UI 设计', description: '规划界面与交互', kind: 'design' } },
-  { id: 'development', type: 'workflow', position: { x: 600, y: 180 }, data: { label: 'Codex 开发', description: '在本地实现产品', kind: 'development' } },
-  { id: 'verification', type: 'workflow', position: { x: 860, y: 180 }, data: { label: '测试验证', description: '检查功能与质量', kind: 'verification' } },
-  { id: 'review', type: 'workflow', position: { x: 1120, y: 180 }, data: { label: '人工审核', description: '由你决定是否交付', kind: 'review' } },
+const stageOrder: Record<WorkflowNodeType, number> = {
+  requirement: 0,
+  design: 1,
+  implementation: 2,
+  verification: 3,
+  approval: 4,
+}
+
+const starterNodes: WorkflowNode[] = [
+  { id: 'requirements', type: 'workflow', position: { x: 80, y: 180 }, data: { title: '需求分析', description: '梳理目标与用户问题', nodeType: 'requirement', config: {} } },
+  { id: 'design', type: 'workflow', position: { x: 340, y: 180 }, data: { title: 'UI 设计', description: '规划界面与交互', nodeType: 'design', config: {} } },
+  { id: 'development', type: 'workflow', position: { x: 600, y: 180 }, data: { title: 'Codex 开发', description: '在本地实现产品', nodeType: 'implementation', config: {} } },
+  { id: 'verification', type: 'workflow', position: { x: 860, y: 180 }, data: { title: '测试验证', description: '检查功能与质量', nodeType: 'verification', config: {} } },
+  { id: 'review', type: 'workflow', position: { x: 1120, y: 180 }, data: { title: '人工审核', description: '由你决定是否交付', nodeType: 'approval', config: {} } },
 ]
 
-const initialEdges: Edge[] = initialNodes.slice(0, -1).map((node, index) => ({
-  id: `${node.id}-${initialNodes[index + 1].id}`,
+const starterEdges = starterNodes.slice(0, -1).map((node, index) => ({
+  id: `${node.id}-${starterNodes[index + 1].id}`,
   source: node.id,
-  target: initialNodes[index + 1].id,
+  target: starterNodes[index + 1].id,
   type: 'smoothstep',
   animated: false,
   style: { stroke: '#aab8d0', strokeWidth: 1.5 },
 }))
 
-function FlowContent({ onRegisterAddNode }: { onRegisterAddNode: (add: () => void) => void }) {
-  const [saved] = useState<Partial<WorkflowSnapshot> | null>(() => typeof window === 'undefined' ? null : readWorkflowSnapshot())
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowNodeModel['data']>>((saved?.nodes as WorkflowNodeModel[] | undefined) ?? initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState((saved?.edges as Edge[] | undefined) ?? initialEdges)
-  const [viewport, setViewport] = useState<Viewport>(saved?.viewport ?? { x: 0, y: 0, zoom: 0.72 })
-  const { fitView } = useReactFlow()
-  const nodeTypes = useMemo(() => ({ workflow: WorkflowNode }), [])
+export type WorkflowCanvasHandle = {
+  addNode: () => void
+  updateNode: (id: string, data: Partial<WorkflowNodeData>) => void
+}
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => writeWorkflowSnapshot({ nodes, edges, viewport }), 180)
-    return () => window.clearTimeout(timeout)
-  }, [nodes, edges, viewport])
+type WorkflowCanvasProps = {
+  documentId: string
+  onRegister: (handle: WorkflowCanvasHandle) => void
+  onSelectNode: (node: WorkflowNode | null) => void
+}
+
+function initialDocument(documentId: string): { document: WorkflowDocument; hadSavedDocument: boolean; error: string } {
+  try {
+    const saved = readWorkflowForProject(documentId)
+    return {
+      document: {
+        nodes: (saved?.nodes as WorkflowNode[] | undefined) ?? starterNodes,
+        edges: saved?.edges ?? starterEdges,
+        viewport: saved?.viewport ?? { x: 0, y: 0, zoom: 0.72 },
+      },
+      hadSavedDocument: Boolean(saved),
+      error: '',
+    }
+  } catch (error) {
+    return {
+      document: { nodes: starterNodes, edges: starterEdges, viewport: { x: 0, y: 0, zoom: 0.72 } },
+      hadSavedDocument: true,
+      error: error instanceof Error ? error.message : '工作流数据不可读取，编辑不会覆盖已有数据。',
+    }
+  }
+}
+
+function connectionError(connection: Connection, nodes: WorkflowNode[], edges: WorkflowDocument['edges']): string | null {
+  if (!connection.source || !connection.target) return '请连接两个有效节点。'
+  if (connection.source === connection.target) return '不能将节点连接到自身。'
+  const source = nodes.find((node) => node.id === connection.source)
+  const target = nodes.find((node) => node.id === connection.target)
+  if (!source || !target) return '连接引用的节点不存在。'
+  const duplicate = edges.some((edge) => edge.source === connection.source && edge.target === connection.target &&
+    (edge.sourceHandle ?? null) === (connection.sourceHandle ?? null) && (edge.targetHandle ?? null) === (connection.targetHandle ?? null))
+  if (duplicate) return '这条连线已经存在。'
+  if (stageOrder[source.data.nodeType] >= stageOrder[target.data.nodeType]) return '连线只能从较早的流程阶段指向较晚阶段。'
+  return null
+}
+
+function FlowContent({ documentId, onRegister, onSelectNode }: WorkflowCanvasProps) {
+  const [initial] = useState(() => initialDocument(documentId))
+  const [nodes, setNodes] = useState<WorkflowNode[]>(initial.document.nodes)
+  const [edges, setEdges] = useState<WorkflowDocument['edges']>(initial.document.edges)
+  const [viewport, setViewport] = useState<Viewport>(initial.document.viewport)
+  const [storageError, setStorageError] = useState(initial.error)
+  const storageLocked = useRef(Boolean(initial.error))
+  const [connectionErrorMessage, setConnectionErrorMessage] = useState('')
+  const { fitView } = useReactFlow()
+  const nodeTypes = useMemo(() => ({ workflow: WorkflowNodeView }), [])
+
+  const persist = useCallback((nextNodes: WorkflowNode[], nextEdges: WorkflowDocument['edges'], nextViewport: Viewport) => {
+    if (storageLocked.current) return
+    try {
+      saveWorkflowForProject(documentId, { nodes: nextNodes, edges: nextEdges, viewport: nextViewport })
+      setStorageError('')
+    } catch {
+      setStorageError('工作流暂时无法保存。请检查浏览器本地存储空间。')
+    }
+  }, [documentId])
+
+  const handleNodesChange = useCallback((changes: NodeChange<WorkflowNode>[]) => {
+    const next = applyNodeChanges(changes, nodes) as WorkflowNode[]
+    setNodes(next)
+    persist(next, edges, viewport)
+  }, [nodes, edges, viewport, persist])
+
+  const handleEdgesChange = useCallback((changes: EdgeChange[]) => {
+    const next = applyEdgeChanges(changes, edges)
+    setEdges(next)
+    persist(nodes, next, viewport)
+  }, [nodes, edges, viewport, persist])
+
+  const updateNode = useCallback((id: string, data: Partial<WorkflowNodeData>) => {
+    const next = nodes.map((node) => node.id === id ? { ...node, data: { ...node.data, ...data } } : node)
+    setNodes(next)
+    persist(next, edges, viewport)
+  }, [nodes, edges, viewport, persist])
+
+  const addNode = useCallback(() => {
+    const nextNode: WorkflowNode = {
+      id: crypto.randomUUID(),
+      type: 'workflow',
+      position: { x: 280 + (nodes.length % 3) * 44, y: 330 + Math.floor(nodes.length / 3) * 110 },
+      data: { title: `新建步骤 ${nodes.length - starterNodes.length + 1}`, description: '规划节点 · 不会自动执行', nodeType: 'implementation', config: {} },
+    }
+    const next = [...nodes, nextNode]
+    setNodes(next)
+    persist(next, edges, viewport)
+    onSelectNode(nextNode)
+  }, [nodes, edges, viewport, persist, onSelectNode])
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((current) => addEdge({ ...connection, type: 'smoothstep', style: { stroke: '#7395d3', strokeWidth: 1.5 } }, current))
-  }, [setEdges])
+    const reason = connectionError(connection, nodes, edges)
+    if (reason) {
+      setConnectionErrorMessage(reason)
+      return
+    }
+    const next = addEdge({ ...connection, type: 'smoothstep', style: { stroke: '#7395d3', strokeWidth: 1.5 } }, edges)
+    setEdges(next)
+    persist(nodes, next, viewport)
+    setConnectionErrorMessage('')
+  }, [nodes, edges, viewport, persist])
 
-  const addNewNode = useCallback(() => {
-    const id = crypto.randomUUID()
-    setNodes((current) => {
-      const index = current.length - initialNodes.length + 1
-      const next: WorkflowNodeModel = {
-        id,
-        type: 'workflow',
-        position: { x: 280 + (current.length % 3) * 44, y: 330 + Math.floor(current.length / 3) * 110 },
-        data: { label: `新建步骤 ${index}`, description: '示例节点 · 可连接与移动', kind: 'development' },
-      }
-      return [...current, next]
-    })
-  }, [setNodes])
-
-  useEffect(() => {
-    onRegisterAddNode(() => addNewNode)
-    return () => onRegisterAddNode(() => () => undefined)
-  }, [addNewNode, onRegisterAddNode])
+  const isValidConnection = useCallback((connection: Connection | Edge) => connectionError({
+    source: connection.source,
+    target: connection.target,
+    sourceHandle: connection.sourceHandle ?? null,
+    targetHandle: connection.targetHandle ?? null,
+  }, nodes, edges) === null, [nodes, edges])
+  const handle = useMemo(() => ({ addNode, updateNode }), [addNode, updateNode])
+  // Keep the current imperative surface in sync for the workspace toolbar and inspector.
+  useEffect(() => { onRegister(handle) }, [handle, onRegister])
 
   return (
     <ReactFlow
@@ -79,25 +172,36 @@ function FlowContent({ onRegisterAddNode }: { onRegisterAddNode: (add: () => voi
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
+      onNodesChange={handleNodesChange}
+      onEdgesChange={handleEdgesChange}
       onConnect={onConnect}
-      defaultViewport={viewport}
-      onMoveEnd={(_, next) => setViewport(next)}
-      onInit={() => { if (!saved?.viewport) void fitView({ padding: 0.2, duration: 220 }) }}
-      fitViewOptions={{ padding: 0.2, duration: 220 }}
+      isValidConnection={isValidConnection}
+      onConnectEnd={(_, state) => {
+        if (!state.isValid) setConnectionErrorMessage('连接被拒绝：请勿自连接或重复连线，并按流程阶段从前向后连接。')
+      }}
+      onMoveEnd={(_, next) => { setViewport(next); persist(nodes, edges, next) }}
+      onInit={() => {
+        if (!initial.hadSavedDocument) {
+          persist(nodes, edges, viewport)
+          void fitView({ padding: 0.2, duration: 220 })
+        }
+      }}
       minZoom={0.18}
       maxZoom={1.8}
       deleteKeyCode={['Backspace', 'Delete']}
+      onNodeClick={(_, node) => onSelectNode(node as WorkflowNode)}
+      onPaneClick={() => onSelectNode(null)}
       attributionPosition="top-right"
     >
       <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e6eaf0" />
       <Controls position="bottom-right" showInteractive={false} />
       <MiniMap position="bottom-left" pannable zoomable nodeColor="#aac3f2" maskColor="rgba(245,247,250,.72)" />
+      <div className="workflow-validation-note">连接只允许从较早阶段指向较晚阶段；自连接和重复连线会被拒绝。</div>
+      {(connectionErrorMessage || storageError) && <div className="workflow-alert" role={storageError ? 'alert' : 'status'}>{connectionErrorMessage || storageError}</div>}
     </ReactFlow>
   )
 }
 
-export function WorkflowCanvas({ onRegisterAddNode }: { onRegisterAddNode: (add: () => void) => void }) {
-  return <ReactFlowProvider><FlowContent onRegisterAddNode={onRegisterAddNode} /></ReactFlowProvider>
+export function WorkflowCanvas(props: WorkflowCanvasProps) {
+  return <ReactFlowProvider><FlowContent {...props} /></ReactFlowProvider>
 }
