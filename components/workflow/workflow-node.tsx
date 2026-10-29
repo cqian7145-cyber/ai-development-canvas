@@ -1,25 +1,35 @@
-import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
+import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { ClipboardList, Code2, Palette, Search, ShieldCheck } from 'lucide-react'
 
-export type WorkflowNodeData = { label: string; description: string; kind: string }
-export type WorkflowNodeModel = Node<WorkflowNodeData, 'workflow'>
+import type { WorkflowNode, WorkflowNodeType } from '@/lib/project-model'
+
+export type WorkflowNodeModel = WorkflowNode
 
 const icons = {
-  analysis: Search,
+  requirement: Search,
   design: Palette,
-  development: Code2,
+  implementation: Code2,
   verification: ClipboardList,
-  review: ShieldCheck,
+  approval: ShieldCheck,
 } as const
 
+const labels: Record<WorkflowNodeType, string> = {
+  requirement: '需求分析',
+  design: 'UI 设计',
+  implementation: 'Codex 开发',
+  verification: '测试验证',
+  approval: '人工审核',
+}
+
 export function WorkflowNode({ data, selected }: NodeProps<WorkflowNodeModel>) {
-  const Icon = icons[data.kind as keyof typeof icons] ?? ClipboardList
+  const Icon = icons[data.nodeType] ?? ClipboardList
   return (
     <div className={`workflow-node ${selected ? 'selected' : ''}`}>
-      <Handle type="target" position={Position.Left} />
-      <div className="workflow-node-top"><span className="node-icon"><Icon size={14} /></span><span className="node-name">{data.label}</span></div>
+      <Handle data-testid="workflow-target-handle" type="target" position={Position.Left} />
+      <div className="workflow-node-top"><span className="node-icon"><Icon size={14} /></span><span className="node-name">{data.title}</span></div>
       <p className="node-caption">{data.description}</p>
-      <Handle type="source" position={Position.Right} />
+      <span className="node-type-label">{labels[data.nodeType]}</span>
+      <Handle data-testid="workflow-source-handle" type="source" position={Position.Right} />
     </div>
   )
 }
