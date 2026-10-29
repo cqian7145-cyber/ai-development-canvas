@@ -8,10 +8,10 @@ Branch: `feat/adc-001-project-workspace`
 
 - **PASS** — project and workflow data contracts, migration, import validation, workflow connection rules, and storage error handling pass the repeatable Node suite.
 - **PASS** — Playwright MCP browser checks confirm that an invalid backward connection is rejected with visible feedback, storage failures are visible, and the degraded catalog path leaves the canvas available.
+- **PASS** — an isolated Playwright browser context created two projects, edited distinct node properties, verified project switching isolation, and restored the last-opened project and edits after reload.
 - **PASS** — 1440px and 390px workspace layout checks show the sidebar and main workspace in the expected grid columns with no horizontal document overflow.
 - **PASS** — typecheck, lint, production build, and all six automated tests pass.
-- **NOT VERIFIED** — there is no checked-in Playwright browser runner; browser acceptance was performed in the available Playwright MCP session. `npm test` provides repeatable contract, storage, migration, import/export, and connection-rule coverage, while tldraw IndexedDB refresh was confirmed in browser.
-- **NOT VERIFIED** — a single browser automation run combining project creation, two-project switching, JSON download/upload, and reload is not part of the checked-in test suite.
+- **NOT VERIFIED** — browser checks are not available as a checked-in Playwright runner. Repeatable repository tests use `npm test`; browser acceptance evidence comes from the configured Playwright MCP session.
 - **FAIL** — none in the final quality gate.
 
 ## Repeatable automated tests
@@ -43,6 +43,10 @@ The browser loaded `http://127.0.0.1:3001/`. A Playwright pointer sequence used 
 - With catalog `localStorage.setItem` simulated to throw `QuotaExceededError`, creating a project showed “项目目录保存失败。浏览器存储可能已满或不可用。” The dialog stayed open and the project was not reported as saved.
 - With catalog reads simulated to throw `SecurityError` at page startup, the app displayed **Temporary session** and the warning that the canvas remains interactive while project-list changes will not persist. The original catalog was not overwritten.
 
+### Project isolation, node editing, and restoration — PASS
+
+In a new isolated browser context, the test created **ADC-001A Alpha** and **ADC-001A Beta**, edited the first node in each project to different titles and descriptions, and switched between them. Alpha restored `Alpha Requirement` / `Only in Alpha`; Beta restored `Beta Requirement` / `Only in Beta`, with five starter nodes in each. After reloading with Beta selected, Beta remained selected and its values persisted. A separate isolated run edited the node's JSON configuration, reloaded, and confirmed the valid configuration persisted. Both runs reported zero page errors.
+
 ### Project import/export and restoration — PASS (browser session evidence)
 
 The browser downloaded a real project JSON package (8,925 bytes, schema version 1, six workflow nodes, four edges, and one embedded image). The file chooser imported it as a new project. After a page reload, the imported project remained selected, all six workflow nodes were present, and the tldraw image content remained visible. The unit suite separately repeats package import/export validation and local workflow restoration.
@@ -69,5 +73,5 @@ The quality gate began on `feat/adc-001-project-workspace`, with a clean working
 ## Remaining limits
 
 - Browser interaction evidence depends on the configured Playwright MCP session; no separate browser binary or test framework was installed.
-- Full browser project import/export/reload is evidenced in this session, while `npm test` focuses on repeatable storage/data contracts and import/export validation.
+- Browser evidence was executed through Playwright MCP and is not automatically replayed by `npm test`; the repository's checked-in suite focuses on repeatable storage/data contracts and import/export validation.
 - Browser local storage and IndexedDB remain scoped to the current browser profile and are not transactionally coupled.
