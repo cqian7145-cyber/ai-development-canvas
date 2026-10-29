@@ -19,16 +19,9 @@ import {
   type Viewport,
 } from '@xyflow/react'
 import { readWorkflowForProject, saveWorkflowForProject } from '@/lib/project-storage'
-import type { WorkflowDocument, WorkflowNode, WorkflowNodeData, WorkflowNodeType } from '@/lib/project-model'
+import type { WorkflowDocument, WorkflowNode, WorkflowNodeData } from '@/lib/project-model'
+import { validateWorkflowConnection } from '@/lib/workflow-validation'
 import { WorkflowNode as WorkflowNodeView } from './workflow-node'
-
-const stageOrder: Record<WorkflowNodeType, number> = {
-  requirement: 0,
-  design: 1,
-  implementation: 2,
-  verification: 3,
-  approval: 4,
-}
 
 const starterNodes: WorkflowNode[] = [
   { id: 'requirements', type: 'workflow', position: { x: 80, y: 180 }, data: { title: '需求分析', description: '梳理目标与用户问题', nodeType: 'requirement', config: {} } },
@@ -77,19 +70,6 @@ function initialDocument(documentId: string): { document: WorkflowDocument; hadS
       error: error instanceof Error ? error.message : '工作流数据不可读取，编辑不会覆盖已有数据。',
     }
   }
-}
-
-function connectionError(connection: Connection, nodes: WorkflowNode[], edges: WorkflowDocument['edges']): string | null {
-  if (!connection.source || !connection.target) return '请连接两个有效节点。'
-  if (connection.source === connection.target) return '不能将节点连接到自身。'
-  const source = nodes.find((node) => node.id === connection.source)
-  const target = nodes.find((node) => node.id === connection.target)
-  if (!source || !target) return '连接引用的节点不存在。'
-  const duplicate = edges.some((edge) => edge.source === connection.source && edge.target === connection.target &&
-    (edge.sourceHandle ?? null) === (connection.sourceHandle ?? null) && (edge.targetHandle ?? null) === (connection.targetHandle ?? null))
-  if (duplicate) return '这条连线已经存在。'
-  if (stageOrder[source.data.nodeType] >= stageOrder[target.data.nodeType]) return '连线只能从较早的流程阶段指向较晚阶段。'
-  return null
 }
 
 function FlowContent({ documentId, onRegister, onSelectNode }: WorkflowCanvasProps) {
@@ -145,7 +125,7 @@ function FlowContent({ documentId, onRegister, onSelectNode }: WorkflowCanvasPro
   }, [nodes, edges, viewport, persist, onSelectNode])
 
   const onConnect = useCallback((connection: Connection) => {
-    const reason = connectionError(connection, nodes, edges)
+    const reason = validateWorkflowConnection(connection, nodes, edges)
     if (reason) {
       setConnectionErrorMessage(reason)
       return
@@ -156,12 +136,7 @@ function FlowContent({ documentId, onRegister, onSelectNode }: WorkflowCanvasPro
     setConnectionErrorMessage('')
   }, [nodes, edges, viewport, persist])
 
-  const isValidConnection = useCallback((connection: Connection | Edge) => connectionError({
-    source: connection.source,
-    target: connection.target,
-    sourceHandle: connection.sourceHandle ?? null,
-    targetHandle: connection.targetHandle ?? null,
-  }, nodes, edges) === null, [nodes, edges])
+  const isValidConnection = useCallback((connection: Connection | Edge) => validateWorkflowConnection(connection, nodes, edges) === null, [nodes, edges])
   const handle = useMemo(() => ({ addNode, updateNode }), [addNode, updateNode])
   // Keep the current imperative surface in sync for the workspace toolbar and inspector.
   useEffect(() => { onRegister(handle) }, [handle, onRegister])

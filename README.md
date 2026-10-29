@@ -20,12 +20,13 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Checks
 
 ```bash
+npm test
 npm run typecheck
 npm run lint
 npm run build
 ```
 
-Browser acceptance is manual through Playwright MCP when it is available; this repository does not currently include a separate test runner.
+`npm test` uses Node's built-in test runner and the existing TypeScript compiler; it adds no dependency. Run it with Node 20.14 or newer because tldraw leaves a MessagePort open in Node and the test runner uses `--test-force-exit`. The app itself retains the Next.js minimum of Node 20.9. Browser acceptance is performed with Playwright MCP when available; see [docs/ADC_001_ACCEPTANCE.md](docs/ADC_001_ACCEPTANCE.md) for the latest evidence and the distinction between automated code tests and browser checks.
 
 ## Stack
 

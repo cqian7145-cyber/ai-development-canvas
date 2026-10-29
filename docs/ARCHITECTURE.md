@@ -16,9 +16,13 @@ lib/
   project-model.ts           project and workflow contracts
   project-storage.ts         catalog, migration and pending design snapshots
   project-format.ts          import validation and project file contracts
+  workflow-validation.ts     pure connection rules shared with automated tests
   workflow-storage.ts        project-scoped workflow local storage
+tests/
+  project-data.test.cjs      project, migration, format and connection regression checks
 docs/
   ARCHITECTURE.md
+  ADC_001_ACCEPTANCE.md
   DATA_FORMAT.md
   ROADMAP.md
 ```
@@ -48,3 +52,7 @@ tldraw is distributed under the tldraw license. Its default terms allow developm
 ## Boundaries
 
 All project data stays in the browser profile. There is no authentication, hosted database, external AI API, multi-device sync, or collaboration service. Browser storage is best-effort and users should keep exported backups for important projects.
+
+## Quality checks
+
+`npm test` runs Node's built-in test runner against the project contracts and import validator. Playwright MCP browser checks cover React Flow interaction, storage errors, and browser persistence separately; their latest evidence and remaining gaps are recorded in `docs/ADC_001_ACCEPTANCE.md`. The test command uses `--test-force-exit` for a tldraw-created MessagePort, so automated tests require Node 20.14 or newer; the application runtime minimum remains Node 20.9.

@@ -17,7 +17,8 @@
 ## Phase 2 — Reliability and usability
 
 - Consider user-controlled recovery snapshots and storage quota visibility.
-- Add automated browser regression coverage for project isolation and import/export when a maintained test harness is justified.
+- Keep the Node built-in regression suite for project isolation, migration, import validation, and workflow rules; expand it alongside future data-contract changes.
+- Automate full browser import/export and refresh scenarios when a maintainable local browser runner is available; retain Playwright MCP acceptance evidence in `docs/ADC_001_ACCEPTANCE.md`.
 - Evaluate richer workflow edge semantics only from concrete planning use cases.
 
 ## Future decisions

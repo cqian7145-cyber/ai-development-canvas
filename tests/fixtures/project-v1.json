@@ -1,0 +1,336 @@
+{
+  "format": "ai-development-canvas-project",
+  "schemaVersion": 1,
+  "exportedAt": "2026-10-29T12:55:59.998Z",
+  "project": {
+    "projectId": "d1263561-0c95-4b8c-ab6c-1204eae88c0f",
+    "name": "Automation fixture",
+    "description": "Synthetic project data for repeatable tests",
+    "createdAt": "2026-10-29T12:54:21.469Z",
+    "updatedAt": "2026-10-29T12:54:21.469Z",
+    "schemaVersion": 1,
+    "designDocumentId": "adc-design-d1263561-0c95-4b8c-ab6c-1204eae88c0f",
+    "workflowDocumentId": "adc-workflow-d1263561-0c95-4b8c-ab6c-1204eae88c0f"
+  },
+  "workflow": {
+    "nodes": [
+      {
+        "id": "fixture-requirements",
+        "type": "workflow",
+        "position": {
+          "x": 100,
+          "y": 160
+        },
+        "data": {
+          "title": "需求分析",
+          "description": "梳理目标与用户问题",
+          "nodeType": "requirement",
+          "config": {}
+        },
+        "measured": {
+          "width": 196,
+          "height": 92
+        }
+      },
+      {
+        "id": "fixture-design",
+        "type": "workflow",
+        "position": {
+          "x": 320,
+          "y": 160
+        },
+        "data": {
+          "title": "UI 设计",
+          "description": "规划界面与交互",
+          "nodeType": "design",
+          "config": {}
+        },
+        "measured": {
+          "width": 196,
+          "height": 92
+        }
+      },
+      {
+        "id": "fixture-implementation",
+        "type": "workflow",
+        "position": {
+          "x": 540,
+          "y": 160
+        },
+        "data": {
+          "title": "Codex 开发",
+          "description": "在本地实现产品",
+          "nodeType": "implementation",
+          "config": {}
+        },
+        "measured": {
+          "width": 196,
+          "height": 92
+        }
+      },
+      {
+        "id": "fixture-verification",
+        "type": "workflow",
+        "position": {
+          "x": 760,
+          "y": 160
+        },
+        "data": {
+          "title": "测试验证",
+          "description": "检查功能与质量",
+          "nodeType": "verification",
+          "config": {}
+        },
+        "measured": {
+          "width": 196,
+          "height": 92
+        }
+      },
+      {
+        "id": "fixture-approval",
+        "type": "workflow",
+        "position": {
+          "x": 980,
+          "y": 160
+        },
+        "data": {
+          "title": "人工审核",
+          "description": "由你决定是否交付",
+          "nodeType": "approval",
+          "config": {}
+        },
+        "measured": {
+          "width": 196,
+          "height": 92
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "fixture-edge-0",
+        "source": "fixture-requirements",
+        "target": "fixture-design",
+        "type": "smoothstep",
+        "animated": false,
+        "style": {
+          "stroke": "#aab8d0",
+          "strokeWidth": 1.5
+        }
+      },
+      {
+        "id": "fixture-edge-1",
+        "source": "fixture-design",
+        "target": "fixture-implementation",
+        "type": "smoothstep",
+        "animated": false,
+        "style": {
+          "stroke": "#aab8d0",
+          "strokeWidth": 1.5
+        }
+      },
+      {
+        "id": "fixture-edge-2",
+        "source": "fixture-implementation",
+        "target": "fixture-verification",
+        "type": "smoothstep",
+        "animated": false,
+        "style": {
+          "stroke": "#aab8d0",
+          "strokeWidth": 1.5
+        }
+      },
+      {
+        "id": "fixture-edge-3",
+        "source": "fixture-verification",
+        "target": "fixture-approval",
+        "type": "smoothstep",
+        "animated": false,
+        "style": {
+          "stroke": "#aab8d0",
+          "strokeWidth": 1.5
+        }
+      }
+    ],
+    "viewport": {
+      "x": 27.63754045307445,
+      "y": 244.57605177993528,
+      "zoom": 0.6545307443365695
+    }
+  },
+  "design": {
+    "tldrawFileFormatVersion": 1,
+    "schema": {
+      "schemaVersion": 2,
+      "sequences": {
+        "com.tldraw.store": 5,
+        "com.tldraw.asset": 1,
+        "com.tldraw.camera": 1,
+        "com.tldraw.document": 2,
+        "com.tldraw.instance": 26,
+        "com.tldraw.instance_page_state": 5,
+        "com.tldraw.page": 1,
+        "com.tldraw.instance_presence": 6,
+        "com.tldraw.pointer": 1,
+        "com.tldraw.shape": 4,
+        "com.tldraw.user": 1,
+        "com.tldraw.asset.image": 6,
+        "com.tldraw.asset.video": 5,
+        "com.tldraw.asset.bookmark": 2,
+        "com.tldraw.shape.group": 0,
+        "com.tldraw.shape.text": 4,
+        "com.tldraw.shape.bookmark": 2,
+        "com.tldraw.shape.draw": 5,
+        "com.tldraw.shape.geo": 12,
+        "com.tldraw.shape.note": 13,
+        "com.tldraw.shape.line": 5,
+        "com.tldraw.shape.frame": 1,
+        "com.tldraw.shape.arrow": 8,
+        "com.tldraw.shape.highlight": 4,
+        "com.tldraw.shape.embed": 4,
+        "com.tldraw.shape.image": 5,
+        "com.tldraw.shape.video": 4,
+        "com.tldraw.binding.arrow": 1
+      }
+    },
+    "records": [
+      {
+        "x": 0,
+        "y": 0,
+        "lastActivityTimestamp": 0,
+        "meta": {},
+        "id": "pointer:pointer",
+        "typeName": "pointer"
+      },
+      {
+        "x": 0,
+        "y": 0,
+        "z": 1,
+        "meta": {},
+        "id": "camera:page:page",
+        "typeName": "camera"
+      },
+      {
+        "name": "",
+        "color": "#7B66DC",
+        "imageUrl": "",
+        "meta": {},
+        "id": "user:r-cfI8SBBECUyXeSxlF1u",
+        "typeName": "user"
+      },
+      {
+        "editingShapeId": null,
+        "croppingShapeId": null,
+        "selectedShapeIds": [
+          "shape:9kXcAhTLrOtw7M_DqGaXT"
+        ],
+        "hoveredShapeId": null,
+        "erasingShapeIds": [],
+        "hintingShapeIds": [],
+        "focusedGroupId": null,
+        "meta": {},
+        "id": "instance_page_state:page:page",
+        "pageId": "page:page",
+        "typeName": "instance_page_state"
+      },
+      {
+        "id": "asset:-778846990",
+        "type": "image",
+        "typeName": "asset",
+        "props": {
+          "name": "phase1-browser-fixture.png",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/k3sAAAAASUVORK5CYII=",
+          "w": 1,
+          "h": 1,
+          "fileSize": 68,
+          "mimeType": "image/png",
+          "isAnimated": false
+        },
+        "meta": {}
+      },
+      {
+        "x": 483.50379943847656,
+        "y": 390.5056915283203,
+        "rotation": 0,
+        "isLocked": false,
+        "opacity": 1,
+        "meta": {},
+        "id": "shape:9kXcAhTLrOtw7M_DqGaXT",
+        "type": "image",
+        "props": {
+          "w": 1,
+          "h": 1,
+          "assetId": "asset:-778846990",
+          "playing": true,
+          "url": "",
+          "crop": null,
+          "flipX": false,
+          "flipY": false,
+          "altText": ""
+        },
+        "parentId": "page:page",
+        "index": "a10Ff",
+        "typeName": "shape"
+      },
+      {
+        "meta": {},
+        "id": "page:page",
+        "name": "Page 1",
+        "index": "a1",
+        "typeName": "page"
+      },
+      {
+        "gridSize": 10,
+        "name": "",
+        "meta": {},
+        "id": "document:document",
+        "typeName": "document"
+      },
+      {
+        "followingUserId": null,
+        "opacityForNextShape": 1,
+        "stylesForNextShape": {},
+        "brush": null,
+        "scribbles": [],
+        "cursor": {
+          "type": "default",
+          "rotation": 0
+        },
+        "isFocusMode": false,
+        "exportBackground": true,
+        "isDebugMode": false,
+        "isToolLocked": false,
+        "screenBounds": {
+          "x": 223.99620056152344,
+          "y": 115.99430847167969,
+          "w": 968.6173706054688,
+          "h": 784.6116943359375
+        },
+        "insets": [
+          true,
+          true,
+          false,
+          true
+        ],
+        "zoomBrush": null,
+        "isGridMode": false,
+        "isPenMode": false,
+        "chatMessage": "",
+        "isChatting": false,
+        "highlightedUserIds": [],
+        "isFocused": true,
+        "devicePixelRatio": 0.999999989253098,
+        "isCoarsePointer": false,
+        "isHoveringCanvas": null,
+        "openMenus": [],
+        "isChangingStyle": false,
+        "isReadonly": false,
+        "meta": {},
+        "duplicateProps": null,
+        "cameraState": "idle",
+        "id": "instance:instance",
+        "currentPageId": "page:page",
+        "typeName": "instance"
+      }
+    ]
+  }
+}

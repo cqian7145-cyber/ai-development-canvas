@@ -25,11 +25,11 @@ export function WorkflowNode({ data, selected }: NodeProps<WorkflowNodeModel>) {
   const Icon = icons[data.nodeType] ?? ClipboardList
   return (
     <div className={`workflow-node ${selected ? 'selected' : ''}`}>
-      <Handle type="target" position={Position.Left} />
+      <Handle data-testid="workflow-target-handle" type="target" position={Position.Left} />
       <div className="workflow-node-top"><span className="node-icon"><Icon size={14} /></span><span className="node-name">{data.title}</span></div>
       <p className="node-caption">{data.description}</p>
       <span className="node-type-label">{labels[data.nodeType]}</span>
-      <Handle type="source" position={Position.Right} />
+      <Handle data-testid="workflow-source-handle" type="source" position={Position.Right} />
     </div>
   )
 }
